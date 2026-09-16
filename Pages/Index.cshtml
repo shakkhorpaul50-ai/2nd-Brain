@@ -1,0 +1,20 @@
+@page
+@model IndexModel
+@{ ViewData["Title"] = "Offline Code Assistant"; }
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand"><span class="spark">✦</span><span>Local Code AI</span></div>
+    <button class="new-chat" id="newChat">＋ New chat</button>
+    <div class="offline"><i></i><div><strong>Fully offline</strong><small>No cloud. No Node.js.</small></div></div>
+    <button class="settings-link" id="openSettings">⚙ Local setup</button>
+  </aside>
+  <main class="chat-area">
+    <header><div><strong>Code helper</strong><span id="modelLabel">local-coder</span></div><button id="openSettingsTop" aria-label="Open local setup">⚙</button></header>
+    <section class="conversation" id="conversation">
+      <article class="intro" id="intro"><div class="logo">✦</div><h1>What will you build?</h1><p>Your private coding partner for C#, Razor, and CSS — running from your own drive.</p><div class="suggestions"><button data-prompt="Create a clean ASP.NET Razor login page with C# validation.">Razor login page <span>→</span></button><button data-prompt="Explain and fix this C# error: NullReferenceException.">Fix a C# error <span>→</span></button><button data-prompt="Write responsive CSS for a modern dashboard.">Style a dashboard <span>→</span></button></div></article>
+    </section>
+    <form class="composer" id="chatForm"><textarea id="prompt" rows="1" placeholder="Ask for C#, .cshtml, or CSS…" aria-label="Your message"></textarea><button id="send" type="submit" aria-label="Send message">↑</button></form>
+    <p class="privacy">Everything stays on this computer and USB drive.</p>
+  </main>
+</div>
+<dialog id="settings"><form method="dialog"><button class="close" value="cancel" aria-label="Close">×</button><h2>Local model connection</h2><p>Start <code>llama-server</code> on this USB drive, then match its local address here. This app never calls the internet.</p><label>Server URL<input id="serverUrl" type="url" value="http://127.0.0.1:8080" required></label><label>Model name<input id="modelName" value="local-coder" required></label><div class="settings-grid"><label>Max response tokens<input id="maxTokens" type="number" min="64" max="8192" value="2048"></label><label>Temperature<input id="temperature" type="number" min="0" max="2" step="0.1" value="0.2"></label></div><p class="setup-note">Recommended for 28 GB: a 7B–8B C#-capable GGUF model in Q4_K_M (about 4–6 GB), leaving room for the app and runtime.</p><button class="save" id="saveSettings" value="default">Save local settings</button><output id="settingsError"></output></form></dialog>
