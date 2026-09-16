@@ -1,0 +1,16 @@
+const $ = s => document.querySelector(s), conversation = $('#conversation'), intro = $('#intro'), prompt = $('#prompt');
+let history = [];
+function escapeHtml(text) { const d = document.createElement('div'); d.textContent = text; return d.innerHTML; }
+function format(text) { return escapeHtml(text).replace(/```(\w*)?\n([\s\S]*?)```/g, (_, lang, code) => `<pre><span>${lang || 'code'}</span><code>${code}</code></pre>`).replace(/\n/g, '<br>'); }
+function add(role, content) { intro?.remove(); const article = document.createElement('article'); article.className = `message ${role}`; article.innerHTML = `<div class="avatar">${role === 'user' ? 'You' : '✦'}</div><div class="bubble">${format(content)}</div>`; conversation.append(article); conversation.scrollTop = conversation.scrollHeight; return article; }
+async function send(message) { const value = message || prompt.value.trim(); if (!value) return; add('user', value); history.push({ role: 'user', content: value }); prompt.value = ''; prompt.style.height = 'auto'; $('#send').disabled = true; const waiting = add('assistant', 'Thinking locally…');
+  try { const r = await fetch('/api/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({message:value, history:history.slice(0,-1)}) }); const body = await r.json(); if (!r.ok) throw new Error(body.detail || body.error || 'Unable to reach the local model.'); waiting.querySelector('.bubble').innerHTML = format(body.content); history.push({ role:'assistant', content:body.content }); }
+  catch (e) { waiting.querySelector('.bubble').textContent = e.message; } finally { $('#send').disabled = false; prompt.focus(); }
+}
+$('#chatForm').addEventListener('submit', e => { e.preventDefault(); send(); });
+prompt.addEventListener('input', () => { prompt.style.height = 'auto'; prompt.style.height = `${Math.min(prompt.scrollHeight, 180)}px`; });
+document.querySelectorAll('[data-prompt]').forEach(b => b.addEventListener('click', () => send(b.dataset.prompt)));
+$('#newChat').addEventListener('click', () => { history = []; conversation.innerHTML = `<article class="intro" id="intro"><div class="logo">✦</div><h1>What will you build?</h1><p>Your private coding partner for C#, Razor, and CSS — running from your own drive.</p></article>`; });
+const dialog = $('#settings'); function openSettings() { dialog.showModal(); } $('#openSettings').onclick = openSettings; $('#openSettingsTop').onclick = openSettings;
+async function loadSettings() { const r = await fetch('/api/status'); const {settings} = await r.json(); $('#serverUrl').value=settings.serverUrl; $('#modelName').value=settings.modelName; $('#maxTokens').value=settings.maxTokens; $('#temperature').value=settings.temperature; $('#modelLabel').textContent=settings.modelName; }
+$('#saveSettings').addEventListener('click', async e => { e.preventDefault(); const data={serverUrl:$('#serverUrl').value,modelName:$('#modelName').value,maxTokens:+$('#maxTokens').value,temperature:+$('#temperature').value}; const r=await fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}); if (!r.ok) { $('#settingsError').textContent=(await r.json()).error; return; } $('#modelLabel').textContent=data.modelName; dialog.close(); }); loadSettings();
